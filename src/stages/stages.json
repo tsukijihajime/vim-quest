@@ -160,7 +160,7 @@
     "buffer": ["nme", "buttn"],
     "cursor": [0, 0],
     "goal": { "type": "transform", "expected": ["top", "  name!", "button", "end"] },
-    "solution": "aa<Esc>A!<Esc>I<Space><Space><Esc>jeio<Esc>oend<Esc>ggOtop"
+    "solution": "aa<Esc>A!<Esc>I<Space><Space><Esc>Otop<Esc>jjeio<Esc>oend"
   },
   {
     "id": "12-change",
@@ -185,9 +185,9 @@
     "title": "13. 写して貼る",
     "lesson": "y でレジスタに写す。yy は 1 行ぶん。p は後ろへ、P は前へ貼る。行ぶんと文字ぶんで貼り方が変わる。",
     "allowedKeys": "hjklwbeg0^$G123456789fFtT;,{}WBExdiaIAoO<Esc><BS><CR>cypP",
-    "buffer": ["one two", "A", "B"],
+    "buffer": ["one apple", "A", "B"],
     "cursor": [0, 0],
-    "goal": { "type": "transform", "expected": ["one two", "twoA", "B", "one two"] },
+    "goal": { "type": "transform", "expected": ["one apple", "appleA", "B", "one apple"] },
     "solution": "yyGpggwy$jP"
   },
   {
