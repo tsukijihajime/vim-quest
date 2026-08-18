@@ -64,15 +64,31 @@ export function clearedHtml(session: Session): string {
     `<div class="stars">${marks}</div>`,
     `<div class="score">${session.keystrokes} キー（par ${session.stage.par}）</div>`,
     '<div class="hint">Enter で次へ / R でリトライ</div>',
+    '<div class="actions">',
+    '<button class="action next" type="button">次のステージへ</button>',
+    '<button class="action retry" type="button">リトライ</button>',
+    '</div>',
     '</div>',
   ].join('')
 }
 
-export function renderPlay(container: HTMLElement, session: Session): void {
+export type PlayHandlers = {
+  onBack: () => void
+  onRetry: () => void
+  /** 次のステージがなければ null */
+  onNext: (() => void) | null
+}
+
+export function renderPlay(
+  container: HTMLElement,
+  session: Session,
+  handlers: PlayHandlers,
+): void {
   const { stage } = session
   container.innerHTML = [
     '<div class="game">',
     '<header class="hud-top">',
+    '<button class="back" type="button">← 一覧へ</button>',
     `<div class="stage-title">${escapeHtml(stage.title)}</div>`,
     `<div class="lesson">${escapeHtml(stage.lesson)}</div>`,
     '</header>',
@@ -81,4 +97,13 @@ export function renderPlay(container: HTMLElement, session: Session): void {
     session.status === 'cleared' ? clearedHtml(session) : '',
     '</div>',
   ].join('')
+
+  container.querySelector('.back')?.addEventListener('click', handlers.onBack)
+  container.querySelector('.retry')?.addEventListener('click', handlers.onRetry)
+
+  const next = container.querySelector<HTMLButtonElement>('.next')
+  if (next !== null) {
+    if (handlers.onNext === null) next.disabled = true
+    else next.addEventListener('click', handlers.onNext)
+  }
 }

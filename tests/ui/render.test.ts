@@ -1,8 +1,9 @@
-import { describe, expect, it } from 'vitest'
+// @vitest-environment happy-dom
+import { describe, expect, it, vi } from 'vitest'
 import { parseKeys } from '../../src/core/keys'
 import { pressKey, startSession } from '../../src/game/session'
 import type { Session } from '../../src/game/session'
-import { bufferHtml, clearedHtml, escapeHtml, hudHtml } from '../../src/ui/render'
+import { bufferHtml, clearedHtml, escapeHtml, hudHtml, renderPlay } from '../../src/ui/render'
 import { makeStage } from '../stages/fixtures'
 
 function play(session: Session, notation: string): Session {
@@ -141,5 +142,82 @@ describe('clearedHtml', () => {
   it('操作の案内を出す', () => {
     const stage = makeStage({ goal: { type: 'collect', targets: [[0, 1]] }, solution: 'l' })
     expect(clearedHtml(play(startSession(stage), 'l'))).toContain('リトライ')
+  })
+})
+
+describe('renderPlay', () => {
+  it('ステージのタイトルとバッファを描く', () => {
+    const container = document.createElement('div')
+    const session = startSession(makeStage({ title: 'テストの間' }))
+    renderPlay(container, session, { onBack: vi.fn(), onRetry: vi.fn(), onNext: vi.fn() })
+
+    expect(container.querySelector('.stage-title')?.textContent).toBe('テストの間')
+    expect(container.querySelectorAll('.cell')).toHaveLength(6)
+    expect(container.querySelector('.cleared')).toBeNull()
+  })
+
+  it('一覧へボタンで onBack を呼ぶ', () => {
+    const container = document.createElement('div')
+    const onBack = vi.fn()
+    renderPlay(container, startSession(makeStage()), {
+      onBack,
+      onRetry: vi.fn(),
+      onNext: vi.fn(),
+    })
+
+    container.querySelector<HTMLButtonElement>('.back')?.click()
+    expect(onBack).toHaveBeenCalledOnce()
+  })
+
+  it('クリア後、リトライボタンで onRetry を呼ぶ', () => {
+    const container = document.createElement('div')
+    const stage = makeStage({ goal: { type: 'collect', targets: [[0, 1]] }, solution: 'l' })
+    const onRetry = vi.fn()
+    renderPlay(container, play(startSession(stage), 'l'), {
+      onBack: vi.fn(),
+      onRetry,
+      onNext: vi.fn(),
+    })
+
+    container.querySelector<HTMLButtonElement>('.retry')?.click()
+    expect(onRetry).toHaveBeenCalledOnce()
+  })
+
+  it('クリア後、次へボタンで onNext を呼ぶ', () => {
+    const container = document.createElement('div')
+    const stage = makeStage({ goal: { type: 'collect', targets: [[0, 1]] }, solution: 'l' })
+    const onNext = vi.fn()
+    renderPlay(container, play(startSession(stage), 'l'), {
+      onBack: vi.fn(),
+      onRetry: vi.fn(),
+      onNext,
+    })
+
+    container.querySelector<HTMLButtonElement>('.next')?.click()
+    expect(onNext).toHaveBeenCalledOnce()
+  })
+
+  it('次のステージがなければ次へボタンを無効化する', () => {
+    const container = document.createElement('div')
+    const stage = makeStage({ goal: { type: 'collect', targets: [[0, 1]] }, solution: 'l' })
+    renderPlay(container, play(startSession(stage), 'l'), {
+      onBack: vi.fn(),
+      onRetry: vi.fn(),
+      onNext: null,
+    })
+
+    expect(container.querySelector<HTMLButtonElement>('.next')?.disabled).toBe(true)
+  })
+
+  it('クリア前は次へ／リトライボタンを描かない', () => {
+    const container = document.createElement('div')
+    renderPlay(container, startSession(makeStage()), {
+      onBack: vi.fn(),
+      onRetry: vi.fn(),
+      onNext: vi.fn(),
+    })
+
+    expect(container.querySelector('.next')).toBeNull()
+    expect(container.querySelector('.retry')).toBeNull()
   })
 })
