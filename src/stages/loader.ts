@@ -20,6 +20,16 @@ function inBounds(buffer: string[], coord: [number, number]): boolean {
   return col >= 0 && col <= Math.max(0, buffer[row].length - 1)
 }
 
+/** parseKeys を呼び、失敗時はどのフィールドが原因かを理由に前置する */
+function parseKeysField(fieldName: string, notation: string): string[] | string {
+  try {
+    return parseKeys(notation)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'キー表記を解析できない'
+    return `${fieldName}: ${message}`
+  }
+}
+
 function validateGoal(raw: unknown, buffer: string[], cursor: [number, number]): Goal | string {
   if (typeof raw !== 'object' || raw === null) return 'goal がオブジェクトでない'
   const goal = raw as Record<string, unknown>
@@ -66,14 +76,13 @@ function validateStage(raw: unknown): LoadedStage | string {
   const goal = validateGoal(s.goal, buffer, cursor)
   if (typeof goal === 'string') return goal
 
-  let allowed: Set<string>
-  let solutionKeys: string[]
-  try {
-    allowed = new Set(parseKeys(s.allowedKeys as string))
-    solutionKeys = parseKeys(s.solution as string)
-  } catch (error) {
-    return error instanceof Error ? error.message : 'キー表記を解析できない'
-  }
+  const allowedKeysResult = parseKeysField('allowedKeys', s.allowedKeys as string)
+  if (typeof allowedKeysResult === 'string') return allowedKeysResult
+  const allowed = new Set(allowedKeysResult)
+
+  const solutionResult = parseKeysField('solution', s.solution as string)
+  if (typeof solutionResult === 'string') return solutionResult
+  const solutionKeys = solutionResult
   if (solutionKeys.length === 0) return 'solution が空である'
 
   const stage: Stage = {
@@ -99,6 +108,7 @@ export function loadStages(raw: unknown): {
 
   const stages: LoadedStage[] = []
   const invalid: InvalidStage[] = []
+  const seenIds = new Set<string>()
   raw.forEach((item, index) => {
     const result = validateStage(item)
     if (typeof result === 'string') {
@@ -109,6 +119,11 @@ export function loadStages(raw: unknown): {
       invalid.push({ id, reason: result })
       return
     }
+    if (seenIds.has(result.id)) {
+      invalid.push({ id: result.id, reason: `id が重複している: ${result.id}` })
+      return
+    }
+    seenIds.add(result.id)
     stages.push(result)
   })
   return { stages, invalid }
