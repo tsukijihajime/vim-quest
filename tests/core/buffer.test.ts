@@ -21,6 +21,19 @@ describe('normalizeLines', () => {
   it('空でない配列はそのまま返す', () => {
     expect(normalizeLines(['a'])).toEqual(['a'])
   })
+
+  it('入力配列を変更しない', () => {
+    const input = ['a', 'b']
+    const original = ['a', 'b']
+    const result = normalizeLines(input)
+    expect(input).toEqual(original)
+  })
+
+  it('非空配列の場合、異なる参照を返す', () => {
+    const input = ['a', 'b']
+    const result = normalizeLines(input)
+    expect(result).not.toBe(input)
+  })
 })
 
 describe('lastCol', () => {
@@ -68,6 +81,13 @@ describe('sliceCharwise', () => {
       sliceCharwise(['abc', 'def', 'ghi'], { row: 0, col: 1 }, { row: 2, col: 2 }),
     ).toEqual(['bc', 'def', 'gh'])
   })
+
+  it('入力配列を変更しない', () => {
+    const input = ['abcdef']
+    const original = ['abcdef']
+    sliceCharwise(input, { row: 0, col: 1 }, { row: 0, col: 4 })
+    expect(input).toEqual(original)
+  })
 })
 
 describe('deleteCharwise', () => {
@@ -80,11 +100,25 @@ describe('deleteCharwise', () => {
       deleteCharwise(['abc', 'def', 'ghi'], { row: 0, col: 1 }, { row: 2, col: 2 }),
     ).toEqual(['ai'])
   })
+
+  it('入力配列を変更しない', () => {
+    const input = ['abcdef']
+    const original = ['abcdef']
+    deleteCharwise(input, { row: 0, col: 1 }, { row: 0, col: 4 })
+    expect(input).toEqual(original)
+  })
 })
 
 describe('sliceLinewise', () => {
   it('両端を含めて行を切り出す', () => {
     expect(sliceLinewise(['a', 'b', 'c'], 0, 1)).toEqual(['a', 'b'])
+  })
+
+  it('入力配列を変更しない', () => {
+    const input = ['a', 'b', 'c']
+    const original = ['a', 'b', 'c']
+    sliceLinewise(input, 0, 1)
+    expect(input).toEqual(original)
   })
 })
 
@@ -95,6 +129,13 @@ describe('deleteLinewise', () => {
 
   it('全行を削除したら空行 1 つを残す', () => {
     expect(deleteLinewise(['a', 'b'], 0, 1)).toEqual([''])
+  })
+
+  it('入力配列を変更しない', () => {
+    const input = ['a', 'b', 'c']
+    const original = ['a', 'b', 'c']
+    deleteLinewise(input, 0, 1)
+    expect(input).toEqual(original)
   })
 })
 
@@ -112,6 +153,13 @@ describe('insertCharwise', () => {
       cursor: { row: 1, col: 0 },
     })
   })
+
+  it('入力配列を変更しない', () => {
+    const input = ['axz']
+    const original = ['axz']
+    insertCharwise(input, { row: 0, col: 1 }, ['bc'])
+    expect(input).toEqual(original)
+  })
 })
 
 describe('insertLinewise', () => {
@@ -122,10 +170,24 @@ describe('insertLinewise', () => {
   it('末尾に追加できる', () => {
     expect(insertLinewise(['a'], 1, ['b'])).toEqual(['a', 'b'])
   })
+
+  it('入力配列を変更しない', () => {
+    const input = ['a', 'c']
+    const original = ['a', 'c']
+    insertLinewise(input, 1, ['b'])
+    expect(input).toEqual(original)
+  })
 })
 
 describe('splitLine', () => {
   it('カーソル位置で行を 2 つに割る', () => {
     expect(splitLine(['abcd'], { row: 0, col: 2 })).toEqual(['ab', 'cd'])
+  })
+
+  it('入力配列を変更しない', () => {
+    const input = ['abcd']
+    const original = ['abcd']
+    splitLine(input, { row: 0, col: 2 })
+    expect(input).toEqual(original)
   })
 })

@@ -1,8 +1,8 @@
 import type { Cursor, Mode } from './types'
 
-/** 行配列が空にならないことを保証する */
+/** 行配列が空にならないことを保証する（新しい配列を返す） */
 export function normalizeLines(lines: string[]): string[] {
-  return lines.length === 0 ? [''] : lines
+  return lines.length === 0 ? [''] : [...lines]
 }
 
 /** その行で許されるカーソル列の上限 */
