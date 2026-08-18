@@ -280,3 +280,43 @@ export function paragraphBackward(
   }
   return { cursor: { row, col: 0 }, kind: 'exclusive' }
 }
+
+/**
+ * オペレータ（d / c / y）と合成するための w / W。
+ *
+ * Vim は最後の 1 語のステップだけを特別扱いする:
+ *   - その 1 歩で行をまたぐなら、削除範囲を元の行の末尾で止める（次の行と結合しない）
+ *   - バッファ末尾まで走り切ったなら、最後の文字まで含める
+ *     （wordForward は最終文字の位置を返すが、exclusive の終端としては 1 つ足りない）
+ *
+ * count が 2 以上のときは、直前までを通常の wordForward で進めてから
+ * 最後の 1 歩だけをこの規則で解決する。
+ */
+export function wordForwardForOperator(
+  lines: string[],
+  cursor: Cursor,
+  count: number,
+  big: boolean,
+): MotionResult {
+  const prev = count <= 1 ? cursor : wordForward(lines, cursor, count - 1, big).cursor
+  const startClass = classOf(charAt(lines, prev), big)
+  let q = nextPos(lines, prev)
+
+  if (startClass !== 'blank') {
+    while (q !== null && q.col !== 0 && classOf(charAt(lines, q), big) === startClass) {
+      q = nextPos(lines, q)
+    }
+  }
+  while (q !== null && classOf(charAt(lines, q), big) === 'blank' && !isEmptyLine(lines, q.row)) {
+    q = nextPos(lines, q)
+  }
+
+  // バッファ末尾に到達した、または最後の 1 歩で行をまたいだ
+  if (q === null || q.row > prev.row) {
+    return {
+      cursor: { row: prev.row, col: lines[prev.row].length },
+      kind: 'exclusive',
+    }
+  }
+  return { cursor: q, kind: 'exclusive' }
+}

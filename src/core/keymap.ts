@@ -17,6 +17,7 @@ import {
   wordEnd,
   wordEndBackward,
   wordForward,
+  wordForwardForOperator,
 } from './motions'
 import {
   applyCharwiseDelete,
@@ -36,7 +37,7 @@ import type {
 const DIGITS = '0123456789'
 
 type MotionOutcome =
-  | { type: 'motion'; result: MotionResult; keepDesiredCol: boolean; stopAtLineEnd: boolean }
+  | { type: 'motion'; result: MotionResult; keepDesiredCol: boolean }
   | { type: 'needsLiteral'; motion: CharSearchKind }
   | { type: 'needsG' }
   | { type: 'unknown' }
@@ -45,13 +46,12 @@ type MotionOutcome =
 
 function motion(
   result: MotionResult,
-  options: { keepDesiredCol?: boolean; stopAtLineEnd?: boolean } = {},
+  options: { keepDesiredCol?: boolean } = {},
 ): MotionOutcome {
   return {
     type: 'motion',
     result,
     keepDesiredCol: options.keepDesiredCol ?? false,
-    stopAtLineEnd: options.stopAtLineEnd ?? false,
   }
 }
 
@@ -91,9 +91,9 @@ function resolveMotion(
     case '$':
       return motion(lineEnd(lines, cursor, count))
     case 'w':
-      return motion(wordForward(lines, cursor, count, false), { stopAtLineEnd: true })
+      return motion(wordForward(lines, cursor, count, false))
     case 'W':
-      return motion(wordForward(lines, cursor, count, true), { stopAtLineEnd: true })
+      return motion(wordForward(lines, cursor, count, true))
     case 'b':
       return motion(wordBackward(lines, cursor, count, false))
     case 'B':
@@ -145,7 +145,6 @@ function applyOperator(
   state: EditorState,
   op: OperatorName,
   result: MotionResult,
-  stopAtLineEnd: boolean,
 ): EditorState {
   const range = rangeFor(state.cursor, result)
   if (range.linewise) {
@@ -153,11 +152,7 @@ function applyOperator(
     return reset(state)
   }
 
-  let end = range.end
-  // dw の特例: 行の最後の単語の上にいるとき、次の行へ食い込まない
-  if (stopAtLineEnd && end.row > range.start.row) {
-    end = { row: range.start.row, col: state.lines[range.start.row].length }
-  }
+  const end = range.end
   if (range.start.row === end.row && range.start.col === end.col) return reset(state)
   if (op === 'd') return applyCharwiseDelete(state, range.start, end)
   return reset(state)
@@ -168,10 +163,9 @@ function finishMotion(
   op: OperatorName | null,
   result: MotionResult,
   keepDesiredCol: boolean,
-  stopAtLineEnd: boolean,
 ): EditorState {
   if (op === null) return withCursor(state, result, keepDesiredCol)
-  return applyOperator(state, op, result, stopAtLineEnd)
+  return applyOperator(state, op, result)
 }
 
 function resolveCharSearchPending(
@@ -193,7 +187,7 @@ function resolveCharSearchPending(
     false,
   )
   if (result === null) return reset(remembered)
-  return finishMotion(remembered, pending.op, result, false, false)
+  return finishMotion(remembered, pending.op, result, false)
 }
 
 function resolveGPending(
@@ -205,11 +199,11 @@ function resolveGPending(
     const result = pending.explicitCount
       ? gotoLine(state.lines, pending.count - 1)
       : gotoFirstLine(state.lines)
-    return finishMotion(state, pending.op, result, false, false)
+    return finishMotion(state, pending.op, result, false)
   }
   if (key === 'e') {
     const result = wordEndBackward(state.lines, state.cursor, pending.count)
-    return finishMotion(state, pending.op, result, false, false)
+    return finishMotion(state, pending.op, result, false)
   }
   return reset(state)
 }
@@ -258,10 +252,17 @@ export function applyNormalKey(state: EditorState, key: string): EditorState {
   const motionCount = opCount * count
   const explicitCount = typedCount !== null || opCount !== 1
 
+  // オペレータが立っているときの w / W は最後の 1 歩だけを特別扱いする
+  // 専用モーションへ振り替える（cw → ce と同じ位置）
+  if (op !== null && (key === 'w' || key === 'W')) {
+    const result = wordForwardForOperator(state.lines, state.cursor, motionCount, key === 'W')
+    return finishMotion(state, op, result, false)
+  }
+
   const outcome = resolveMotion(state, key, motionCount, explicitCount)
   switch (outcome.type) {
     case 'motion':
-      return finishMotion(state, op, outcome.result, outcome.keepDesiredCol, outcome.stopAtLineEnd)
+      return finishMotion(state, op, outcome.result, outcome.keepDesiredCol)
     case 'needsLiteral':
       return {
         ...state,

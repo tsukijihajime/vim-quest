@@ -36,6 +36,18 @@ describe('d + モーション', () => {
     expect(run(['keep this', 'next line'], [0, 5], 'dw').lines).toEqual(['keep ', 'next line'])
   })
 
+  it('dw はバッファ末尾でも最後の文字まで消す', () => {
+    expect(run(['keep this'], [0, 5], 'dw').lines).toEqual(['keep '])
+  })
+
+  it('dw は最終行の末尾でも最後の文字まで消す', () => {
+    expect(run(['aa bb', 'cc dd'], [1, 3], 'dw').lines).toEqual(['aa bb', 'cc '])
+  })
+
+  it('d3w は最後の 1 語だけ行末で止め、途中の行は結合する', () => {
+    expect(run(['a b', 'c d', 'e f'], [0, 0], 'd3w').lines).toEqual(['d', 'e f'])
+  })
+
   it('d$ は行末までを含めて消す', () => {
     expect(run(['tail junk here'], [0, 4], 'd$').lines).toEqual(['tail'])
   })
