@@ -7,20 +7,20 @@
     "buffer": [".........", ".........", ".........", ".........", "........."],
     "cursor": [2, 4],
     "goal": { "type": "collect", "targets": [[0, 4], [2, 0], [2, 8], [4, 4]] },
-    "solution": "kkjjhhhhlllllllljjhhhh"
+    "solution": "hhhhjjllllkkkkjjllll"
   },
   {
     "id": "02-word",
     "title": "2. 単語ごとに飛ぶ",
     "lesson": "w で次の単語の先頭へ、b で前の単語の先頭へ。1 文字ずつ動く必要はない。",
     "allowedKeys": "hjklwb",
-    "buffer": ["the quick brown fox jumps", "over the lazy dog again"],
-    "cursor": [0, 0],
+    "buffer": ["alpha bravo charlie delta echo foxtrot golf hotel"],
+    "cursor": [0, 31],
     "goal": {
       "type": "collect",
-      "targets": [[0, 10], [0, 20], [1, 5], [1, 14], [0, 16]]
+      "targets": [[0, 44], [0, 20], [0, 12], [0, 6], [0, 0]]
     },
-    "solution": "wwwwwwww"
+    "solution": "wwbbbbbbb"
   },
   {
     "id": "03-word-end",
@@ -33,7 +33,7 @@
       "type": "collect",
       "targets": [[1, 12], [1, 17], [1, 4], [0, 15], [0, 9]]
     },
-    "solution": "eegegegege"
+    "solution": "keeeee"
   },
   {
     "id": "04-line-ends",
@@ -50,7 +50,7 @@
       "type": "collect",
       "targets": [[0, 25], [0, 4], [1, 26], [1, 8], [2, 0]]
     },
-    "solution": "$^j$^j0"
+    "solution": "w$w$j0"
   },
   {
     "id": "05-line-jump",
@@ -65,24 +65,28 @@
       "line five",
       "line six",
       "line seven",
-      "line eight"
+      "line eight",
+      "line nine",
+      "line ten",
+      "line eleven",
+      "line twelve"
     ],
-    "cursor": [4, 0],
-    "goal": { "type": "collect", "targets": [[7, 0], [0, 0], [3, 0], [5, 0]] },
-    "solution": "Ggg4G6G"
+    "cursor": [5, 0],
+    "goal": { "type": "collect", "targets": [[11, 0], [0, 0], [3, 0], [8, 0]] },
+    "solution": "Ggg4G9G"
   },
   {
     "id": "06-char-search",
     "title": "6. 文字を狙い撃つ",
     "lesson": "f: で次の : へ、t: でその手前へ。F と T は逆方向。; で繰り返し、, で逆に繰り返す。",
     "allowedKeys": "hjklwbeg0^$G123456789fFtT;,",
-    "buffer": ["a:b:c:d:e:f", "x-y-z-w-v-u"],
+    "buffer": ["a:bb:ccc:dddd:eeeee:f", "x-yy-zzz-wwww-v"],
     "cursor": [0, 0],
     "goal": {
       "type": "collect",
-      "targets": [[0, 1], [0, 5], [0, 6], [1, 9], [1, 3]]
+      "targets": [[0, 1], [0, 4], [0, 8], [0, 13], [0, 19]]
     },
-    "solution": "f:;;t:jf-;F-;;"
+    "solution": "f:;;;;"
   },
   {
     "id": "07-paragraph",
@@ -92,15 +96,28 @@
     "buffer": [
       "first paragraph line one",
       "first paragraph line two",
+      "first paragraph line three",
+      "first paragraph line four",
+      "first paragraph line five",
       "",
-      "second paragraph here",
+      "second paragraph line one",
+      "second paragraph line two",
+      "second paragraph line three",
+      "second paragraph line four",
+      "second paragraph line five",
       "",
-      "third paragraph line",
-      "third paragraph more"
+      "third paragraph line one",
+      "third paragraph line two",
+      "third paragraph line three",
+      "third paragraph line four",
+      "third paragraph line five",
+      "",
+      "fourth paragraph line one",
+      "fourth paragraph line two"
     ],
-    "cursor": [1, 3],
-    "goal": { "type": "collect", "targets": [[2, 0], [4, 0], [6, 0], [0, 0]] },
-    "solution": "}}}{{{"
+    "cursor": [8, 0],
+    "goal": { "type": "collect", "targets": [[5, 0], [11, 0], [17, 0]] },
+    "solution": "{}}"
   },
   {
     "id": "08-move-review",
@@ -108,16 +125,15 @@
     "lesson": "W B E は空白だけを区切りとみなす。記号の多いコードでは w より W が速い。",
     "allowedKeys": "hjklwbeg0^$G123456789fFtT;,{}WBE",
     "buffer": [
-      "const url = \"https://ex.com/a/b\";",
-      "let n = calc(x, y) + calc(y, x);",
+      "a=1; b=2; c=3; d=4; e=5;",
       "return [n, url, done];"
     ],
-    "cursor": [0, 0],
+    "cursor": [0, 10],
     "goal": {
       "type": "collect",
-      "targets": [[0, 12], [0, 32], [1, 8], [2, 7], [2, 16]]
+      "targets": [[0, 5], [0, 15], [0, 20]]
     },
-    "solution": "WWW$j^WWWjhWW"
+    "solution": "BWWW"
   },
   {
     "id": "09-x",
@@ -147,7 +163,7 @@
     "buffer": ["nme"],
     "cursor": [0, 0],
     "goal": { "type": "transform", "expected": ["top", "  name!", "end"] },
-    "solution": "aa<Esc>A!<Esc>I<Space><Space><Esc>oend<Esc>ggOtop"
+    "solution": "aa<Esc>A!<Esc>I<Space><Space><Esc>oend<Esc>kOtop"
   },
   {
     "id": "12-change",
@@ -175,17 +191,17 @@
     "buffer": ["one two", "X"],
     "cursor": [0, 0],
     "goal": { "type": "transform", "expected": ["one two", "one two", "Xtwo"] },
-    "solution": "wy$jpggyyjP"
+    "solution": "yyPwy$Gp"
   },
   {
     "id": "14-undo-replace",
     "title": "14. 取り消して、置き換える",
-    "lesson": "u で直前の変更を取り消す。r は次に打った 1 文字で置き換える。まず dd して u で戻してみよう。",
+    "lesson": "u で直前の変更を取り消す。ためしに何か変えて u で戻せることを確かめよう。r は次に打った 1 文字で置き換える。ズレた文字を 1 つずつ直すなら r が最短。",
     "allowedKeys": "hjklwbeg0^$G123456789fFtT;,{}WBExdiaIAoO<Esc><BS><CR>cypPur",
-    "buffer": ["cat", "dog"],
+    "buffer": ["xat", "dxg", "bax", "cxw"],
     "cursor": [0, 0],
-    "goal": { "type": "transform", "expected": ["car", "dog"] },
-    "solution": "ddu$rr"
+    "goal": { "type": "transform", "expected": ["cat", "dog", "bat", "cow"] },
+    "solution": "rcjlroj$rtjhro"
   },
   {
     "id": "15-count",
@@ -195,7 +211,7 @@
     "buffer": ["one two three four five six", "1 2 3 4 5 6 7"],
     "cursor": [0, 0],
     "goal": { "type": "transform", "expected": ["one six", "1 2 3 7"] },
-    "solution": "wd4wj03wd3w"
+    "solution": "wd4wjwd3w"
   },
   {
     "id": "16-review-rename",
