@@ -2,11 +2,238 @@
   {
     "id": "01-hjkl",
     "title": "1. 指を動かさずに動く",
-    "lesson": "h で左、l で右、j で下、k で上。★ を 4 つすべて踏むとクリア。",
+    "lesson": "h で左、l で右、j で下、k で上。光っているマスをすべて踏むとクリア。",
     "allowedKeys": "hjkl",
     "buffer": [".........", ".........", ".........", ".........", "........."],
     "cursor": [2, 4],
     "goal": { "type": "collect", "targets": [[0, 4], [2, 0], [2, 8], [4, 4]] },
     "solution": "kkjjhhhhlllllllljjhhhh"
+  },
+  {
+    "id": "02-word",
+    "title": "2. 単語ごとに飛ぶ",
+    "lesson": "w で次の単語の先頭へ、b で前の単語の先頭へ。1 文字ずつ動く必要はない。",
+    "allowedKeys": "hjklwb",
+    "buffer": ["the quick brown fox jumps", "over the lazy dog again"],
+    "cursor": [0, 0],
+    "goal": {
+      "type": "collect",
+      "targets": [[0, 10], [0, 20], [1, 5], [1, 14], [0, 16]]
+    },
+    "solution": "wwwwwwww"
+  },
+  {
+    "id": "03-word-end",
+    "title": "3. 単語の末尾を狙う",
+    "lesson": "e で単語の末尾へ、ge で前の単語の末尾へ。w が先頭なら e は末尾だと覚える。",
+    "allowedKeys": "hjklwbeg",
+    "buffer": ["alpha beta gamma", "delta epsilon zeta"],
+    "cursor": [1, 6],
+    "goal": {
+      "type": "collect",
+      "targets": [[1, 12], [1, 17], [1, 4], [0, 15], [0, 9]]
+    },
+    "solution": "eegegegege"
+  },
+  {
+    "id": "04-line-ends",
+    "title": "4. 行の端へ一息で",
+    "lesson": "0 で行頭、^ で最初の非空白、$ で行末。インデントのある行では 0 と ^ が違う。",
+    "allowedKeys": "hjklwbeg0^$",
+    "buffer": [
+      "    function greet(name) {",
+      "        return \"hi \" + name",
+      "    }"
+    ],
+    "cursor": [0, 0],
+    "goal": {
+      "type": "collect",
+      "targets": [[0, 25], [0, 4], [1, 26], [1, 8], [2, 0]]
+    },
+    "solution": "$^j$^j0"
+  },
+  {
+    "id": "05-line-jump",
+    "title": "5. 行番号で飛ぶ",
+    "lesson": "gg で先頭行、G で最終行、4G で 4 行目へ。j を連打する必要はない。",
+    "allowedKeys": "hjklwbeg0^$G123456789",
+    "buffer": [
+      "line one",
+      "line two",
+      "line three",
+      "line four",
+      "line five",
+      "line six",
+      "line seven",
+      "line eight"
+    ],
+    "cursor": [4, 0],
+    "goal": { "type": "collect", "targets": [[7, 0], [0, 0], [3, 0], [5, 0]] },
+    "solution": "Ggg4G6G"
+  },
+  {
+    "id": "06-char-search",
+    "title": "6. 文字を狙い撃つ",
+    "lesson": "f: で次の : へ、t: でその手前へ。F と T は逆方向。; で繰り返し、, で逆に繰り返す。",
+    "allowedKeys": "hjklwbeg0^$G123456789fFtT;,",
+    "buffer": ["a:b:c:d:e:f", "x-y-z-w-v-u"],
+    "cursor": [0, 0],
+    "goal": {
+      "type": "collect",
+      "targets": [[0, 1], [0, 5], [0, 6], [1, 9], [1, 3]]
+    },
+    "solution": "f:;;t:jf-;F-;;"
+  },
+  {
+    "id": "07-paragraph",
+    "title": "7. 段落を跨ぐ",
+    "lesson": "} で次の空行へ、{ で前の空行へ。空行が段落の境界になる。",
+    "allowedKeys": "hjklwbeg0^$G123456789fFtT;,{}",
+    "buffer": [
+      "first paragraph line one",
+      "first paragraph line two",
+      "",
+      "second paragraph here",
+      "",
+      "third paragraph line",
+      "third paragraph more"
+    ],
+    "cursor": [1, 3],
+    "goal": { "type": "collect", "targets": [[2, 0], [4, 0], [6, 0], [0, 0]] },
+    "solution": "}}}{{{"
+  },
+  {
+    "id": "08-move-review",
+    "title": "8. 移動の総合演習",
+    "lesson": "W B E は空白だけを区切りとみなす。記号の多いコードでは w より W が速い。",
+    "allowedKeys": "hjklwbeg0^$G123456789fFtT;,{}WBE",
+    "buffer": [
+      "const url = \"https://ex.com/a/b\";",
+      "let n = calc(x, y) + calc(y, x);",
+      "return [n, url, done];"
+    ],
+    "cursor": [0, 0],
+    "goal": {
+      "type": "collect",
+      "targets": [[0, 12], [0, 32], [1, 8], [2, 7], [2, 16]]
+    },
+    "solution": "WWW$j^WWWjhWW"
+  },
+  {
+    "id": "09-x",
+    "title": "9. 一文字消す",
+    "lesson": "x でカーソル位置の文字を消す。ここからは目標のテキストに一致させるとクリア。",
+    "allowedKeys": "hjklwbeg0^$G123456789fFtT;,{}WBEx",
+    "buffer": ["heXllo woXrld"],
+    "cursor": [0, 2],
+    "goal": { "type": "transform", "expected": ["hello world"] },
+    "solution": "xfXx"
+  },
+  {
+    "id": "10-operator",
+    "title": "10. オペレータとモーションを組む",
+    "lesson": "d はモーションと組み合わせる。dw で単語、d$ で行末まで、dd で 1 行。ここが Vim の核心。",
+    "allowedKeys": "hjklwbeg0^$G123456789fFtT;,{}WBExd",
+    "buffer": ["keep this line", "delete this whole line", "tail junk here"],
+    "cursor": [0, 0],
+    "goal": { "type": "transform", "expected": ["keep line", "tail"] },
+    "solution": "wdwjddf<Space>d$"
+  },
+  {
+    "id": "11-insert",
+    "title": "11. 文字を書き足す",
+    "lesson": "i はカーソル位置、a はその次、I は行頭、A は行末から挿入。o は下に、O は上に行を作る。Esc で戻る。",
+    "allowedKeys": "hjklwbeg0^$G123456789fFtT;,{}WBExdiaIAoO<Esc><BS><CR>",
+    "buffer": ["nme"],
+    "cursor": [0, 0],
+    "goal": { "type": "transform", "expected": ["top", "  name!", "end"] },
+    "solution": "aa<Esc>A!<Esc>I<Space><Space><Esc>oend<Esc>ggOtop"
+  },
+  {
+    "id": "12-change",
+    "title": "12. 消して書き直す",
+    "lesson": "c は削除して挿入モードに入る。cw で単語、c$ で行末まで、cc で行の中身を入れ替える。",
+    "allowedKeys": "hjklwbeg0^$G123456789fFtT;,{}WBExdiaIAoO<Esc><BS><CR>c",
+    "buffer": [
+      "var oldName = 1",
+      "var junk stuff here",
+      "replace me entirely",
+      "keep me"
+    ],
+    "cursor": [0, 0],
+    "goal": {
+      "type": "transform",
+      "expected": ["var newName = 1", "var done", "gone", "keep me"]
+    },
+    "solution": "wcwnewName<Esc>j0wc$done<Esc>jccgone"
+  },
+  {
+    "id": "13-yank-paste",
+    "title": "13. 写して貼る",
+    "lesson": "y でレジスタに写す。yy は 1 行ぶん。p は後ろへ、P は前へ貼る。行ぶんと文字ぶんで貼り方が変わる。",
+    "allowedKeys": "hjklwbeg0^$G123456789fFtT;,{}WBExdiaIAoO<Esc><BS><CR>cypP",
+    "buffer": ["one two", "X"],
+    "cursor": [0, 0],
+    "goal": { "type": "transform", "expected": ["one two", "one two", "Xtwo"] },
+    "solution": "wy$jpggyyjP"
+  },
+  {
+    "id": "14-undo-replace",
+    "title": "14. 取り消して、置き換える",
+    "lesson": "u で直前の変更を取り消す。r は次に打った 1 文字で置き換える。まず dd して u で戻してみよう。",
+    "allowedKeys": "hjklwbeg0^$G123456789fFtT;,{}WBExdiaIAoO<Esc><BS><CR>cypPur",
+    "buffer": ["cat", "dog"],
+    "cursor": [0, 0],
+    "goal": { "type": "transform", "expected": ["car", "dog"] },
+    "solution": "ddu$rr"
+  },
+  {
+    "id": "15-count",
+    "title": "15. 回数を前に付ける",
+    "lesson": "d4w で 4 単語ぶん消す。3w で 3 単語進む。オペレータの前でもモーションの前でも同じ意味になる。",
+    "allowedKeys": "hjklwbeg0^$G123456789fFtT;,{}WBExdiaIAoO<Esc><BS><CR>cypPur",
+    "buffer": ["one two three four five six", "1 2 3 4 5 6 7"],
+    "cursor": [0, 0],
+    "goal": { "type": "transform", "expected": ["one six", "1 2 3 7"] },
+    "solution": "wd4wj03wd3w"
+  },
+  {
+    "id": "16-review-rename",
+    "title": "16. 総合 1 — 関数を直す",
+    "lesson": "関数名と演算子を直す。狙った 1 文字だけを変えるなら r が最短。",
+    "allowedKeys": "hjklwbeg0^$G123456789fFtT;,{}WBExdiaIAoO<Esc><BS><CR>cypPur",
+    "buffer": ["function add(a, b) {", "  return a - b;", "}"],
+    "cursor": [0, 0],
+    "goal": {
+      "type": "transform",
+      "expected": ["function sum(a, b) {", "  return a + b;", "}"]
+    },
+    "solution": "wcwsum<Esc>jr+"
+  },
+  {
+    "id": "17-review-duplicate",
+    "title": "17. 総合 2 — 行を捨てて複製する",
+    "lesson": "余計な行を消して、必要な行を複製する。行番号ジャンプと yy p を組み合わせる。",
+    "allowedKeys": "hjklwbeg0^$G123456789fFtT;,{}WBExdiaIAoO<Esc><BS><CR>cypPur",
+    "buffer": ["const a = 1;", "const b = 2;", "DELETE THIS LINE", "const c = 3;"],
+    "cursor": [0, 0],
+    "goal": {
+      "type": "transform",
+      "expected": ["const a = 1;", "const b = 2;", "const c = 3;", "const c = 3;"]
+    },
+    "solution": "3Gddyyp"
+  },
+  {
+    "id": "18-review-sum",
+    "title": "18. 総合 3 — 行を増やして書き換える",
+    "lesson": "既にある行を写して貼り、そこを書き換える。ゼロから打つより速い。",
+    "allowedKeys": "hjklwbeg0^$G123456789fFtT;,{}WBExdiaIAoO<Esc><BS><CR>cypPur",
+    "buffer": ["  let x = 10", "  let y = 20"],
+    "cursor": [0, 0],
+    "goal": {
+      "type": "transform",
+      "expected": ["  let sum = 30", "  let x = 10", "  let y = 20"]
+    },
+    "solution": "yyPwcwsum<Esc>$hr3"
   }
 ]
