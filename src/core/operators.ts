@@ -189,3 +189,29 @@ export function applyPaste(state: EditorState, after: boolean, count: number): E
   const cursor = clampCursor(inserted.lines, inserted.cursor, 'normal')
   return { ...reset(pushed), lines: inserted.lines, cursor, desiredCol: cursor.col }
 }
+
+export function applyReplace(state: EditorState, ch: string, count: number): EditorState {
+  const { row, col } = state.cursor
+  const line = state.lines[row]
+  // 行末を越える置換は Vim と同じく何もしない
+  if (col + count > line.length) return reset(state)
+
+  const pushed = pushUndo(state)
+  const lines = [...state.lines]
+  lines[row] = line.slice(0, col) + ch.repeat(count) + line.slice(col + count)
+  const cursor = { row, col: col + count - 1 }
+  return { ...reset(pushed), lines, cursor, desiredCol: cursor.col }
+}
+
+export function applyUndo(state: EditorState): EditorState {
+  if (state.undoStack.length === 0) return reset(state)
+  const snapshot = state.undoStack[state.undoStack.length - 1]
+  const cursor = clampCursor(snapshot.lines, snapshot.cursor, 'normal')
+  return {
+    ...reset(state),
+    lines: snapshot.lines,
+    cursor,
+    desiredCol: cursor.col,
+    undoStack: state.undoStack.slice(0, -1),
+  }
+}

@@ -84,6 +84,13 @@ describe('wordBackward (b)', () => {
       col: 0,
     })
   })
+
+  it('B は空白区切りで戻る', () => {
+    // CODE の col12-32 は記号と英数字が混在する 1 つの WORD。
+    // B は空白でしか区切らないため、末尾 (col32) から戻ると
+    // 記号の切れ目 (col31/") では止まらず WORD の先頭 (col12) まで一気に戻る。
+    expect(wordBackward(CODE, { row: 0, col: 32 }, 1, true).cursor).toEqual({ row: 0, col: 12 })
+  })
 })
 
 describe('wordEnd (e)', () => {
@@ -111,6 +118,12 @@ describe('wordEnd (e)', () => {
       row: 2,
       col: 1,
     })
+  })
+
+  it('E は空白区切りで単語末へ動く', () => {
+    // '=' (col10) から進むと、e なら記号の切れ目 (col12 の ") で止まるが、
+    // E は空白でしか区切らないため col12-32 の WORD 全体を飛ばして末尾 col32 まで進む。
+    expect(wordEnd(CODE, { row: 0, col: 10 }, 1, true).cursor).toEqual({ row: 0, col: 32 })
   })
 })
 

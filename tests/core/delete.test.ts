@@ -60,6 +60,15 @@ describe('d + モーション', () => {
     expect(run(['alpha beta'], [0, 0], 'de').lines).toEqual([' beta'])
   })
 
+  it('dge は後方への inclusive モーションを exclusive と同じ扱いにする', () => {
+    // ge は前の単語末（inclusive）だが、仕様 4.2 により後方 inclusive は
+    // オペレータとの合成で exclusive と同じに丸める。
+    // 'foo bar' でカーソルは 'b'(col4)。ge で 'foo' の末尾 'o'(col2) へ。
+    // exclusive 扱いなので [2, 4) を消し、着地文字は含めない。
+    expect(run(['foo bar'], [0, 4], 'dge').lines).toEqual(['fobar'])
+    expect(pos(run(['foo bar'], [0, 4], 'dge'))).toEqual([0, 2])
+  })
+
   it('df は対象文字を含めて消す', () => {
     expect(run(['a:b:c'], [0, 0], 'df:').lines).toEqual(['b:c'])
   })

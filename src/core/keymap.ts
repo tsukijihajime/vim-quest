@@ -28,6 +28,8 @@ import {
   applyLinewiseDelete,
   applyLinewiseYank,
   applyPaste,
+  applyReplace,
+  applyUndo,
   deleteChars,
   pushUndo,
   rangeFor,
@@ -263,6 +265,10 @@ function applySingleCommand(
       return applyPaste(state, true, count)
     case 'P':
       return applyPaste(state, false, count)
+    case 'r':
+      return { ...state, count: null, pending: { kind: 'replace', count } }
+    case 'u':
+      return applyUndo(state)
     default:
       return null
   }
@@ -272,6 +278,10 @@ export function applyNormalKey(state: EditorState, key: string): EditorState {
   const pending = state.pending
 
   if (pending?.kind === 'charSearch') return resolveCharSearchPending(state, pending, key)
+  if (pending?.kind === 'replace') {
+    if (key.length !== 1) return reset(state)
+    return applyReplace(state, key, pending.count)
+  }
   if (pending?.kind === 'g') return resolveGPending(state, pending, key)
 
   // 数値プレフィックス。0 は回数入力中のときだけ数字になる
