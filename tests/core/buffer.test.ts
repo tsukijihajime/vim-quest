@@ -27,6 +27,7 @@ describe('normalizeLines', () => {
     const original = ['a', 'b']
     const result = normalizeLines(input)
     expect(input).toEqual(original)
+    expect(result).toEqual(original)
   })
 
   it('非空配列の場合、異なる参照を返す', () => {
