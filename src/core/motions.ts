@@ -1,5 +1,5 @@
 import { firstNonBlankCol, lastCol } from './buffer'
-import type { Cursor, MotionResult } from './types'
+import type { CharSearchKind, Cursor, MotionResult } from './types'
 
 export function moveLeft(lines: string[], cursor: Cursor, count: number): MotionResult {
   void lines
@@ -205,4 +205,78 @@ export function wordEndBackward(lines: string[], cursor: Cursor, count: number):
     p = q
   }
   return { cursor: p, kind: 'inclusive' }
+}
+
+export function gotoLine(lines: string[], row: number): MotionResult {
+  const clamped = Math.min(Math.max(row, 0), lines.length - 1)
+  return {
+    cursor: { row: clamped, col: firstNonBlankCol(lines[clamped]) },
+    kind: 'linewise',
+  }
+}
+
+export function gotoFirstLine(lines: string[]): MotionResult {
+  return gotoLine(lines, 0)
+}
+
+export function gotoLastLine(lines: string[]): MotionResult {
+  return gotoLine(lines, lines.length - 1)
+}
+
+export function charSearch(
+  lines: string[],
+  cursor: Cursor,
+  kind: CharSearchKind,
+  target: string,
+  count: number,
+  repeat: boolean,
+): MotionResult | null {
+  const line = lines[cursor.row]
+  const forward = kind === 'f' || kind === 't'
+  const till = kind === 't' || kind === 'T'
+  let col = cursor.col
+
+  for (let i = 0; i < count; i += 1) {
+    // t / T の繰り返しは隣接位置に留まってしまうので 1 つ余分にずらす
+    const skip = till && (repeat || i > 0) ? 2 : 1
+    if (forward) {
+      const idx = line.indexOf(target, col + skip)
+      if (idx === -1) return null
+      col = till ? idx - 1 : idx
+    } else {
+      const idx = line.lastIndexOf(target, col - skip)
+      if (idx === -1) return null
+      col = till ? idx + 1 : idx
+    }
+  }
+  // Vim では f と t が inclusive、F と T は exclusive である
+  return { cursor: { row: cursor.row, col }, kind: forward ? 'inclusive' : 'exclusive' }
+}
+
+export function paragraphForward(
+  lines: string[],
+  cursor: Cursor,
+  count: number,
+): MotionResult {
+  let row = cursor.row
+  for (let i = 0; i < count; i += 1) {
+    let r = row + 1
+    while (r < lines.length && lines[r].length !== 0) r += 1
+    row = Math.min(r, lines.length - 1)
+  }
+  return { cursor: { row, col: 0 }, kind: 'exclusive' }
+}
+
+export function paragraphBackward(
+  lines: string[],
+  cursor: Cursor,
+  count: number,
+): MotionResult {
+  let row = cursor.row
+  for (let i = 0; i < count; i += 1) {
+    let r = row - 1
+    while (r > 0 && lines[r].length !== 0) r -= 1
+    row = Math.max(r, 0)
+  }
+  return { cursor: { row, col: 0 }, kind: 'exclusive' }
 }
