@@ -23,8 +23,11 @@ import {
 import {
   applyCharwiseChange,
   applyCharwiseDelete,
+  applyCharwiseYank,
   applyLinewiseChange,
   applyLinewiseDelete,
+  applyLinewiseYank,
+  applyPaste,
   deleteChars,
   pushUndo,
   rangeFor,
@@ -155,14 +158,14 @@ function applyOperator(
   if (range.linewise) {
     if (op === 'd') return applyLinewiseDelete(state, range.startRow, range.endRow)
     if (op === 'c') return applyLinewiseChange(state, range.startRow, range.endRow)
-    return reset(state)
+    return applyLinewiseYank(state, range.startRow, range.endRow)
   }
 
   const end = range.end
   if (range.start.row === end.row && range.start.col === end.col) return reset(state)
   if (op === 'd') return applyCharwiseDelete(state, range.start, end)
   if (op === 'c') return applyCharwiseChange(state, range.start, end)
-  return reset(state)
+  return applyCharwiseYank(state, range.start, end)
 }
 
 function finishMotion(
@@ -256,6 +259,10 @@ function applySingleCommand(
       return enterInsert(state, { row: row + 1, col: 0 }, insertLinewise(state.lines, row + 1, ['']))
     case 'O':
       return enterInsert(state, { row, col: 0 }, insertLinewise(state.lines, row, ['']))
+    case 'p':
+      return applyPaste(state, true, count)
+    case 'P':
+      return applyPaste(state, false, count)
     default:
       return null
   }
@@ -275,14 +282,14 @@ export function applyNormalKey(state: EditorState, key: string): EditorState {
   const typedCount = state.count
   const count = typedCount ?? 1
 
-  if (key === 'd' || key === 'c') {
+  if (key === 'd' || key === 'c' || key === 'y') {
     if (pending?.kind === 'operator') {
       if (pending.op !== key) return reset(state)
       const rows = pending.opCount * count
       const endRow = Math.min(state.lines.length - 1, state.cursor.row + rows - 1)
-      return key === 'd'
-        ? applyLinewiseDelete(state, state.cursor.row, endRow)
-        : applyLinewiseChange(state, state.cursor.row, endRow)
+      if (key === 'd') return applyLinewiseDelete(state, state.cursor.row, endRow)
+      if (key === 'c') return applyLinewiseChange(state, state.cursor.row, endRow)
+      return applyLinewiseYank(state, state.cursor.row, endRow)
     }
     return { ...state, count: null, pending: { kind: 'operator', op: key, opCount: count } }
   }

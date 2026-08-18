@@ -3,10 +3,12 @@ import {
   deleteCharwise,
   deleteLinewise,
   firstNonBlankCol,
+  insertCharwise,
+  insertLinewise,
   sliceCharwise,
   sliceLinewise,
 } from './buffer'
-import type { Cursor, EditorState, MotionResult } from './types'
+import type { Cursor, EditorState, MotionResult, Register } from './types'
 
 export const UNDO_LIMIT = 200
 
@@ -123,4 +125,67 @@ export function applyLinewiseChange(
     mode: 'insert',
     register: { text: removed, linewise: true },
   }
+}
+
+export function applyCharwiseYank(
+  state: EditorState,
+  start: Cursor,
+  end: Cursor,
+): EditorState {
+  const cursor = clampCursor(state.lines, start, 'normal')
+  return {
+    ...reset(state),
+    cursor,
+    desiredCol: cursor.col,
+    register: { text: sliceCharwise(state.lines, start, end), linewise: false },
+  }
+}
+
+export function applyLinewiseYank(
+  state: EditorState,
+  startRow: number,
+  endRow: number,
+): EditorState {
+  const cursor = clampCursor(state.lines, { row: startRow, col: state.cursor.col }, 'normal')
+  return {
+    ...reset(state),
+    cursor,
+    desiredCol: cursor.col,
+    register: { text: sliceLinewise(state.lines, startRow, endRow), linewise: true },
+  }
+}
+
+/** レジスタの内容を count 回ぶんに引き伸ばす */
+function repeatRegister(register: Register, count: number): string[] {
+  if (count <= 1) return register.text
+  if (register.linewise) {
+    const out: string[] = []
+    for (let i = 0; i < count; i += 1) out.push(...register.text)
+    return out
+  }
+  if (register.text.length === 1) return [register.text[0].repeat(count)]
+  const out: string[] = [...register.text]
+  for (let i = 1; i < count; i += 1) {
+    const tail = out.pop() ?? ''
+    out.push(tail + register.text[0], ...register.text.slice(1))
+  }
+  return out
+}
+
+export function applyPaste(state: EditorState, after: boolean, count: number): EditorState {
+  const text = repeatRegister(state.register, count)
+  const pushed = pushUndo(state)
+
+  if (state.register.linewise) {
+    const atRow = after ? state.cursor.row + 1 : state.cursor.row
+    const lines = insertLinewise(state.lines, atRow, text)
+    const cursor = { row: atRow, col: firstNonBlankCol(lines[atRow]) }
+    return { ...reset(pushed), lines, cursor, desiredCol: cursor.col }
+  }
+
+  const line = state.lines[state.cursor.row]
+  const col = after ? Math.min(line.length, state.cursor.col + 1) : state.cursor.col
+  const inserted = insertCharwise(state.lines, { row: state.cursor.row, col }, text)
+  const cursor = clampCursor(inserted.lines, inserted.cursor, 'normal')
+  return { ...reset(pushed), lines: inserted.lines, cursor, desiredCol: cursor.col }
 }
