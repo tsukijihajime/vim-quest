@@ -1,0 +1,122 @@
+:root {
+  --bg: #282828;
+  --bg-soft: #3c3836;
+  --fg: #ebdbb2;
+  --dim: #928374;
+  --accent: #fabd2f;
+  --insert: #8ec07c;
+  --target: #fe8019;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 2rem 1rem;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: "Cascadia Code", Consolas, "SFMono-Regular", Menlo, monospace;
+}
+
+#app {
+  width: min(72rem, 100%);
+}
+
+.hud-top {
+  margin-bottom: 1.25rem;
+}
+
+.stage-title {
+  font-size: 1.1rem;
+  color: var(--accent);
+}
+
+.lesson {
+  margin-top: 0.35rem;
+  color: var(--dim);
+  line-height: 1.6;
+}
+
+.buffer {
+  padding: 1rem 1.25rem;
+  border-radius: 6px;
+  background: var(--bg-soft);
+  font-size: 1.05rem;
+  line-height: 1.7;
+  overflow-x: auto;
+}
+
+.line {
+  white-space: pre;
+}
+
+.cell {
+  display: inline-block;
+  min-width: 1ch;
+}
+
+.target {
+  border-radius: 2px;
+  background: var(--target);
+  color: var(--bg);
+  box-shadow: 0 0 8px var(--target);
+}
+
+.cursor-normal {
+  background: var(--fg);
+  color: var(--bg);
+}
+
+.cursor-insert {
+  box-shadow: inset 2px 0 0 var(--insert);
+}
+
+.hud-bottom {
+  margin-top: 1rem;
+  display: flex;
+  gap: 1.25rem;
+  align-items: baseline;
+  flex-wrap: wrap;
+  color: var(--dim);
+}
+
+.mode {
+  font-weight: bold;
+}
+
+.mode-normal {
+  color: var(--accent);
+}
+
+.mode-insert {
+  color: var(--insert);
+}
+
+.keylog {
+  color: var(--fg);
+  word-break: break-all;
+}
+
+.flash {
+  color: var(--target);
+}
+
+.cleared {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+.stars {
+  font-size: 2rem;
+  color: var(--accent);
+}
+
+.hint {
+  margin-top: 0.5rem;
+  color: var(--dim);
+}

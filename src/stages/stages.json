@@ -1,0 +1,12 @@
+[
+  {
+    "id": "01-hjkl",
+    "title": "1. 指を動かさずに動く",
+    "lesson": "h で左、l で右、j で下、k で上。★ を 4 つすべて踏むとクリア。",
+    "allowedKeys": "hjkl",
+    "buffer": [".........", ".........", ".........", ".........", "........."],
+    "cursor": [2, 4],
+    "goal": { "type": "collect", "targets": [[0, 4], [2, 0], [2, 8], [4, 4]] },
+    "solution": "kkjjhhhhlllllllljjhhhh"
+  }
+]
