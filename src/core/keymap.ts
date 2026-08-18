@@ -1,5 +1,6 @@
 import { clampCursor, firstNonBlankCol, insertLinewise } from './buffer'
 import {
+  changeWordEnd,
   charSearch,
   firstNonBlank,
   gotoFirstLine,
@@ -20,7 +21,9 @@ import {
   wordForwardForOperator,
 } from './motions'
 import {
+  applyCharwiseChange,
   applyCharwiseDelete,
+  applyLinewiseChange,
   applyLinewiseDelete,
   deleteChars,
   pushUndo,
@@ -151,12 +154,14 @@ function applyOperator(
   const range = rangeFor(state.cursor, result)
   if (range.linewise) {
     if (op === 'd') return applyLinewiseDelete(state, range.startRow, range.endRow)
+    if (op === 'c') return applyLinewiseChange(state, range.startRow, range.endRow)
     return reset(state)
   }
 
   const end = range.end
   if (range.start.row === end.row && range.start.col === end.col) return reset(state)
   if (op === 'd') return applyCharwiseDelete(state, range.start, end)
+  if (op === 'c') return applyCharwiseChange(state, range.start, end)
   return reset(state)
 }
 
@@ -270,14 +275,16 @@ export function applyNormalKey(state: EditorState, key: string): EditorState {
   const typedCount = state.count
   const count = typedCount ?? 1
 
-  if (key === 'd') {
+  if (key === 'd' || key === 'c') {
     if (pending?.kind === 'operator') {
-      if (pending.op !== 'd') return reset(state)
+      if (pending.op !== key) return reset(state)
       const rows = pending.opCount * count
       const endRow = Math.min(state.lines.length - 1, state.cursor.row + rows - 1)
-      return applyLinewiseDelete(state, state.cursor.row, endRow)
+      return key === 'd'
+        ? applyLinewiseDelete(state, state.cursor.row, endRow)
+        : applyLinewiseChange(state, state.cursor.row, endRow)
     }
-    return { ...state, count: null, pending: { kind: 'operator', op: 'd', opCount: count } }
+    return { ...state, count: null, pending: { kind: 'operator', op: key, opCount: count } }
   }
 
   if (pending?.kind !== 'operator') {
@@ -289,6 +296,14 @@ export function applyNormalKey(state: EditorState, key: string): EditorState {
   const opCount = pending?.kind === 'operator' ? pending.opCount : 1
   const motionCount = opCount * count
   const explicitCount = typedCount !== null || opCount !== 1
+
+  // cw / cW の特例: 非空白の上では「現在の単語の末尾まで」を対象にする。
+  // 下の w / W 振り替えより前に置くこと。順序が逆だと cw が捕まらない。
+  const onNonBlank = /\S/.test(state.lines[state.cursor.row][state.cursor.col] ?? '')
+  if (op === 'c' && onNonBlank && (key === 'w' || key === 'W')) {
+    const result = changeWordEnd(state.lines, state.cursor, motionCount, key === 'W')
+    return finishMotion(state, op, result, false)
+  }
 
   // オペレータが立っているときの w / W は最後の 1 歩だけを特別扱いする
   // 専用モーションへ振り替える（cw → ce と同じ位置）

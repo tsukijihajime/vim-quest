@@ -320,3 +320,28 @@ export function wordForwardForOperator(
   }
   return { cursor: q, kind: 'exclusive' }
 }
+
+/**
+ * cw / cW の対象範囲を求める。
+ * 現在の単語の末尾を返す。既に末尾にいるならカーソル位置そのままを返す。
+ * count が 2 以上なら、そこから残りの回数だけ wordEnd を進める。
+ */
+export function changeWordEnd(
+  lines: string[],
+  cursor: Cursor,
+  count: number,
+  big: boolean,
+): MotionResult {
+  let q = cursor
+  const cls = classOf(charAt(lines, q), big)
+  for (;;) {
+    const n = nextPos(lines, q)
+    if (n === null || n.row !== q.row) break
+    if (classOf(charAt(lines, n), big) !== cls) break
+    q = n
+  }
+  if (count > 1) {
+    return { cursor: wordEnd(lines, q, count - 1, big).cursor, kind: 'inclusive' }
+  }
+  return { cursor: q, kind: 'inclusive' }
+}

@@ -95,3 +95,32 @@ export function deleteChars(state: EditorState, count: number): EditorState {
   const endCol = Math.min(line.length, state.cursor.col + count)
   return applyCharwiseDelete(state, state.cursor, { row: state.cursor.row, col: endCol })
 }
+
+export function applyCharwiseChange(
+  state: EditorState,
+  start: Cursor,
+  end: Cursor,
+): EditorState {
+  const deleted = applyCharwiseDelete(state, start, end)
+  const cursor = clampCursor(deleted.lines, start, 'insert')
+  return { ...deleted, cursor, desiredCol: cursor.col, mode: 'insert' }
+}
+
+/** cc : 対象行の内容を空にするが、行そのものは 1 行残す */
+export function applyLinewiseChange(
+  state: EditorState,
+  startRow: number,
+  endRow: number,
+): EditorState {
+  const pushed = pushUndo(state)
+  const removed = sliceLinewise(state.lines, startRow, endRow)
+  const lines = [...state.lines.slice(0, startRow), '', ...state.lines.slice(endRow + 1)]
+  return {
+    ...reset(pushed),
+    lines,
+    cursor: { row: startRow, col: 0 },
+    desiredCol: 0,
+    mode: 'insert',
+    register: { text: removed, linewise: true },
+  }
+}
