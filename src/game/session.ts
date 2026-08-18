@@ -1,5 +1,7 @@
 import { applyKey, initialState, isAwaitingLiteral } from '../core/editor'
 import type { EditorState } from '../core/types'
+import { starsFor } from './scoring'
+import type { Stars } from './scoring'
 import type { LoadedStage } from '../stages/types'
 
 /** 画面下部に出すキー履歴の保持件数 */
@@ -17,6 +19,11 @@ export type Session = {
   rejected: string | null
   /** 弾かれた回数の累計。ステージ検証で使う */
   rejectedCount: number
+  /**
+   * クリアした瞬間に一度だけ算出される☆評価。playing の間は null。
+   * 表示用と永続化用の両方がここを読むことで、両者の乖離を構造的に防ぐ
+   */
+  stars: Stars | null
 }
 
 export function startSession(stage: LoadedStage): Session {
@@ -29,7 +36,19 @@ export function startSession(stage: LoadedStage): Session {
     status: 'playing',
     rejected: null,
     rejectedCount: 0,
+    stars: null,
   }
+}
+
+/**
+ * cleared なセッションの☆評価を取り出す。
+ * pressKey がクリアと同時に必ず算出するため、cleared なら非 null が保証される
+ */
+export function clearedStars(session: Session): Stars {
+  if (session.stars === null) {
+    throw new Error('cleared していないセッションから stars を取得しようとした')
+  }
+  return session.stars
 }
 
 /**
@@ -51,7 +70,7 @@ function markCollected(session: Session, editor: EditorState): boolean[] {
   })
 }
 
-export function isGoalMet(session: Session): boolean {
+function isGoalMet(session: Session): boolean {
   const { goal } = session.stage
   if (goal.type === 'collect') return session.collected.every(Boolean)
   const { lines } = session.editor
@@ -77,5 +96,10 @@ export function pressKey(session: Session, key: string): Session {
     collected: markCollected(session, editor),
     rejected: null,
   }
-  return { ...advanced, status: isGoalMet(advanced) ? 'cleared' : 'playing' }
+  const cleared = isGoalMet(advanced)
+  return {
+    ...advanced,
+    status: cleared ? 'cleared' : 'playing',
+    stars: cleared ? starsFor(advanced.keystrokes, advanced.stage.par) : advanced.stars,
+  }
 }

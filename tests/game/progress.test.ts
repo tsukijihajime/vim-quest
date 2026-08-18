@@ -62,6 +62,21 @@ describe('parseProgress', () => {
     const raw = JSON.stringify({ version: 1, cleared: { s1: { stars: 'x' }, s2: { stars: 3, bestKeystrokes: 7 } } })
     expect(parseProgress(raw).cleared).toEqual({ s2: { stars: 3, bestKeystrokes: 7 } })
   })
+
+  it('改ざんされて範囲外になった stars は捨てる', () => {
+    // stars: 4 のような改ざん値を通すと stageSelect の
+    // '☆'.repeat(3 - stars) が負数になり RangeError で画面が白紙になる。
+    // parseProgress（信頼境界）で弾く
+    const raw = JSON.stringify({
+      version: 1,
+      cleared: {
+        s1: { stars: 4, bestKeystrokes: 5 },
+        s2: { stars: 0, bestKeystrokes: 5 },
+        s3: { stars: 2, bestKeystrokes: 5 },
+      },
+    })
+    expect(parseProgress(raw).cleared).toEqual({ s3: { stars: 2, bestKeystrokes: 5 } })
+  })
 })
 
 describe('recordClear', () => {

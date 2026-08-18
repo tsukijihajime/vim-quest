@@ -1,5 +1,5 @@
 import { formatKey } from '../core/keys'
-import { starsFor } from '../game/scoring'
+import { clearedStars } from '../game/session'
 import type { Session } from '../game/session'
 
 const ENTITIES: Record<string, string> = {
@@ -56,14 +56,15 @@ export function hudHtml(session: Session): string {
   ].join('')
 }
 
-export function clearedHtml(session: Session): string {
-  const stars = starsFor(session.keystrokes, session.stage.par)
+export function clearedHtml(session: Session, hasNext: boolean): string {
+  const stars = clearedStars(session)
   const marks = '★'.repeat(stars) + '☆'.repeat(3 - stars)
+  const hint = hasNext ? 'Enter で次へ / R でリトライ' : 'これが最後のステージ。R でリトライ'
   return [
     '<div class="cleared">',
     `<div class="stars">${marks}</div>`,
     `<div class="score">${session.keystrokes} キー（par ${session.stage.par}）</div>`,
-    '<div class="hint">Enter で次へ / R でリトライ</div>',
+    `<div class="hint">${hint}</div>`,
     '<div class="actions">',
     '<button class="action next" type="button">次のステージへ</button>',
     '<button class="action retry" type="button">リトライ</button>',
@@ -88,13 +89,13 @@ export function renderPlay(
   container.innerHTML = [
     '<div class="game">',
     '<header class="hud-top">',
-    '<button class="back" type="button">← 一覧へ</button>',
+    '<button class="back" type="button">← 一覧へ <kbd>Tab</kbd></button>',
     `<div class="stage-title">${escapeHtml(stage.title)}</div>`,
     `<div class="lesson">${escapeHtml(stage.lesson)}</div>`,
     '</header>',
     `<div class="buffer">${bufferHtml(session)}</div>`,
     `<footer class="hud-bottom">${hudHtml(session)}</footer>`,
-    session.status === 'cleared' ? clearedHtml(session) : '',
+    session.status === 'cleared' ? clearedHtml(session, handlers.onNext !== null) : '',
     '</div>',
   ].join('')
 

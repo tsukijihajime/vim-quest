@@ -190,6 +190,14 @@ body {
   border-color: var(--accent);
 }
 
+.back kbd {
+  margin-left: 0.3rem;
+  padding: 0.05rem 0.3rem;
+  border: 1px solid #504945;
+  border-radius: 3px;
+  font-size: 0.8rem;
+}
+
 .actions {
   margin-top: 0.9rem;
   display: flex;

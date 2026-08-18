@@ -8,8 +8,6 @@ import {
 import { applyNormalKey } from './keymap'
 import type { Cursor, EditorState } from './types'
 
-export { pushUndo } from './operators'
-
 export function initialState(lines: string[], cursor: Cursor): EditorState {
   const normalized = normalizeLines([...lines])
   const clamped = clampCursor(normalized, cursor, 'normal')

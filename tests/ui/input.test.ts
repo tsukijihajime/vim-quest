@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest'
-import { normalizeKeyEvent } from '../../src/ui/input'
+// @vitest-environment happy-dom
+import { describe, expect, it, vi } from 'vitest'
+import { attachKeyboard, normalizeKeyEvent } from '../../src/ui/input'
 
 function event(init: Partial<KeyboardEvent>): KeyboardEvent {
   return { ctrlKey: false, altKey: false, metaKey: false, key: '', ...init } as KeyboardEvent
@@ -28,5 +29,55 @@ describe('normalizeKeyEvent', () => {
     expect(normalizeKeyEvent(event({ key: 'ArrowLeft' }))).toBeNull()
     expect(normalizeKeyEvent(event({ key: 'Shift' }))).toBeNull()
     expect(normalizeKeyEvent(event({ key: 'F5' }))).toBeNull()
+  })
+
+  it('Tab は「一覧へ戻る」用の予約キーとして認識する', () => {
+    expect(normalizeKeyEvent(event({ key: 'Tab' }))).toBe('Tab')
+  })
+})
+
+describe('attachKeyboard', () => {
+  it('セッションが有効なときはキーを解釈し、既定動作を抑止する', () => {
+    const onKey = vi.fn()
+    const detach = attachKeyboard(window, onKey, () => true)
+    const evt = new KeyboardEvent('keydown', { key: 'j', cancelable: true })
+    window.dispatchEvent(evt)
+
+    expect(onKey).toHaveBeenCalledWith('j')
+    expect(evt.defaultPrevented).toBe(true)
+    detach()
+  })
+
+  it('セッションが無効なときは何もせず、ブラウザの既定動作（ボタンの Enter/Space 活性化など）を通す', () => {
+    // ステージ選択画面（セッション無し）で、フォーカスしたカードの
+    // Enter/Space が握りつぶされてしまっていた不具合の再現テスト
+    const onKey = vi.fn()
+    const detach = attachKeyboard(window, onKey, () => false)
+    const evt = new KeyboardEvent('keydown', { key: 'Enter', cancelable: true })
+    window.dispatchEvent(evt)
+
+    expect(onKey).not.toHaveBeenCalled()
+    expect(evt.defaultPrevented).toBe(false)
+    detach()
+  })
+
+  it('セッション中でも Ctrl / Alt / Meta 付きの入力はブラウザへ透過する', () => {
+    const onKey = vi.fn()
+    const detach = attachKeyboard(window, onKey, () => true)
+    const evt = new KeyboardEvent('keydown', { key: 's', ctrlKey: true, cancelable: true })
+    window.dispatchEvent(evt)
+
+    expect(onKey).not.toHaveBeenCalled()
+    expect(evt.defaultPrevented).toBe(false)
+    detach()
+  })
+
+  it('購読解除後はイベントを受け取らない', () => {
+    const onKey = vi.fn()
+    const detach = attachKeyboard(window, onKey, () => true)
+    detach()
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'j', cancelable: true }))
+
+    expect(onKey).not.toHaveBeenCalled()
   })
 })

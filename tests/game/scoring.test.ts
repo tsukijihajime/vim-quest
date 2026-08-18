@@ -17,7 +17,7 @@ describe('starsFor', () => {
     expect(starsFor(999, 10)).toBe(1)
   })
 
-  it('1.5 倍は切り上げで判定する', () => {
+  it('1.5 倍は切り捨てで判定する', () => {
     // par 7 の 1.5 倍は 10.5 なので 11 で一つ星になる
     expect(starsFor(10, 7)).toBe(2)
     expect(starsFor(11, 7)).toBe(1)

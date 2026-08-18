@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { describe, expect, it, vi } from 'vitest'
-import { emptyProgress, recordClear } from '../../src/game/progress'
+import { emptyProgress, parseProgress, recordClear } from '../../src/game/progress'
 import { renderStageSelect, stageSelectHtml } from '../../src/ui/stageSelect'
 import { makeStage } from '../stages/fixtures'
 
@@ -45,6 +45,16 @@ describe('stageSelectHtml', () => {
 
   it('未クリアのステージには星を出さない', () => {
     expect(stageSelectHtml(stages, emptyProgress())).not.toContain('★')
+  })
+
+  it('改ざんされた stars（範囲外）の localStorage 値を経由しても描画が落ちない', () => {
+    // localStorage を直接書き換えて stars: 4 を仕込んだシナリオの再現。
+    // parseProgress が信頼境界で弾くので、ここに来る時点で不正値は
+    // 既に取り除かれており '☆'.repeat(負数) の RangeError は起きない
+    const tampered = parseProgress(
+      JSON.stringify({ version: 1, cleared: { a: { stars: 4, bestKeystrokes: 1 } } }),
+    )
+    expect(() => stageSelectHtml(stages, tampered)).not.toThrow()
   })
 
   it('タイトルの HTML 特殊文字を escape する', () => {

@@ -1,8 +1,17 @@
+import type { Stars } from './scoring'
 import type { LoadedStage } from '../stages/types'
 
 export const STORAGE_KEY = 'vimquest:progress'
 
-export type ClearRecord = { stars: number; bestKeystrokes: number }
+export type ClearRecord = { stars: Stars; bestKeystrokes: number }
+
+function isStars(value: unknown): value is Stars {
+  return value === 1 || value === 2 || value === 3
+}
+
+function maxStars(a: Stars, b: Stars): Stars {
+  return (a >= b ? a : b) as Stars
+}
 
 export type Progress = { version: 1; cleared: Record<string, ClearRecord> }
 
@@ -28,7 +37,10 @@ export function parseProgress(raw: string | null): Progress {
   for (const [id, value] of Object.entries(root.cleared as Record<string, unknown>)) {
     if (typeof value !== 'object' || value === null) continue
     const record = value as Record<string, unknown>
-    if (typeof record.stars !== 'number' || typeof record.bestKeystrokes !== 'number') continue
+    // stars は 1〜3 の整数でなければならない。改ざんされた値（例: 4）を
+    // 通すと `'☆'.repeat(3 - stars)` が負数で RangeError を投げ、
+    // 選択画面全体が白紙になる（信頼境界での範囲検証）
+    if (!isStars(record.stars) || typeof record.bestKeystrokes !== 'number') continue
     cleared[id] = { stars: record.stars, bestKeystrokes: record.bestKeystrokes }
   }
   return { version: 1, cleared }
@@ -37,7 +49,7 @@ export function parseProgress(raw: string | null): Progress {
 export function recordClear(
   progress: Progress,
   stageId: string,
-  stars: number,
+  stars: Stars,
   keystrokes: number,
 ): Progress {
   const existing = progress.cleared[stageId]
@@ -45,7 +57,7 @@ export function recordClear(
     existing === undefined
       ? { stars, bestKeystrokes: keystrokes }
       : {
-          stars: Math.max(existing.stars, stars),
+          stars: maxStars(existing.stars, stars),
           bestKeystrokes: Math.min(existing.bestKeystrokes, keystrokes),
         }
   return { version: 1, cleared: { ...progress.cleared, [stageId]: next } }

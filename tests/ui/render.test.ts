@@ -126,22 +126,38 @@ describe('hudHtml', () => {
 describe('clearedHtml', () => {
   it('par 以内なら三つ星を出す', () => {
     const stage = makeStage({ goal: { type: 'collect', targets: [[0, 1]] }, solution: 'l' })
-    expect(clearedHtml(play(startSession(stage), 'l'))).toContain('★★★')
+    expect(clearedHtml(play(startSession(stage), 'l'), true)).toContain('★★★')
   })
 
   it('par を超えたら星が減る', () => {
-    // ターゲットを l/h が触れない行に置き、5 打鍵すべてが数えられる
-    // ようにする（同じ行のターゲットだと 2 打鍵目で即クリアしてしまい
-    // 残りの打鍵が数えられず par 超過を再現できない）
+    // ターゲット [1,0] へ寄り道してから辿り着く経路にし、5 打鍵すべてが
+    // 数えられてからクリアになるようにする（最短で踏んでしまうと
+    // par 超過を再現できない）。l,l,h,h で (0,0) に戻り、最後の j で
+    // ちょうど 5 打鍵目にターゲットへ到達してクリアする
     const stage = makeStage({ goal: { type: 'collect', targets: [[1, 0]] }, solution: 'll' })
-    const html = clearedHtml(play(startSession(stage), 'lllhl'))
+    const played = play(startSession(stage), 'llhhj')
+    expect(played.status).toBe('cleared')
+    const html = clearedHtml(played, true)
     expect(html).toContain('★')
     expect(html).toContain('☆')
   })
 
   it('操作の案内を出す', () => {
     const stage = makeStage({ goal: { type: 'collect', targets: [[0, 1]] }, solution: 'l' })
-    expect(clearedHtml(play(startSession(stage), 'l'))).toContain('リトライ')
+    expect(clearedHtml(play(startSession(stage), 'l'), true)).toContain('リトライ')
+  })
+
+  it('次のステージがあれば Enter での進行を案内する', () => {
+    const stage = makeStage({ goal: { type: 'collect', targets: [[0, 1]] }, solution: 'l' })
+    const html = clearedHtml(play(startSession(stage), 'l'), true)
+    expect(html).toContain('Enter で次へ')
+  })
+
+  it('最後のステージでは Enter を案内しない', () => {
+    const stage = makeStage({ goal: { type: 'collect', targets: [[0, 1]] }, solution: 'l' })
+    const html = clearedHtml(play(startSession(stage), 'l'), false)
+    expect(html).not.toContain('Enter で次へ')
+    expect(html).toContain('最後')
   })
 })
 
@@ -197,7 +213,7 @@ describe('renderPlay', () => {
     expect(onNext).toHaveBeenCalledOnce()
   })
 
-  it('次のステージがなければ次へボタンを無効化する', () => {
+  it('次のステージがなければ次へボタンを無効化し、案内も Enter を出さない', () => {
     const container = document.createElement('div')
     const stage = makeStage({ goal: { type: 'collect', targets: [[0, 1]] }, solution: 'l' })
     renderPlay(container, play(startSession(stage), 'l'), {
@@ -207,6 +223,7 @@ describe('renderPlay', () => {
     })
 
     expect(container.querySelector<HTMLButtonElement>('.next')?.disabled).toBe(true)
+    expect(container.querySelector('.hint')?.textContent).not.toContain('Enter')
   })
 
   it('クリア前は次へ／リトライボタンを描かない', () => {

@@ -1,8 +1,7 @@
 import './ui/styles.css'
 import { loadProgress, recordClear, saveProgress } from './game/progress'
 import type { Progress } from './game/progress'
-import { starsFor } from './game/scoring'
-import { pressKey, startSession } from './game/session'
+import { clearedStars, pressKey, startSession } from './game/session'
 import type { Session } from './game/session'
 import { loadStages } from './stages/loader'
 import stagesJson from './stages/stages.json'
@@ -74,6 +73,14 @@ function main(): void {
     const current = session
     if (current === null) return
 
+    // Tab はどのステージのキーとも衝突しない予約キー。プレイ画面から
+    // 一覧へ戻るキーボード操作をここで保証する（Esc はステージが正規に
+    // 使うため予約できない）
+    if (key === 'Tab') {
+      showSelect()
+      return
+    }
+
     if (current.status === 'cleared') {
       if (key === 'r' || key === 'R') {
         startStage(current.stage)
@@ -91,14 +98,14 @@ function main(): void {
     session = advanced
     if (advanced.status === 'cleared' && !recorded) {
       recorded = true
-      const stars = starsFor(advanced.keystrokes, advanced.stage.par)
+      const stars = clearedStars(advanced)
       progress = recordClear(progress, advanced.stage.id, stars, advanced.keystrokes)
       saveProgress(progress)
     }
     draw()
   }
 
-  attachKeyboard(window, handleKey)
+  attachKeyboard(window, handleKey, () => session !== null)
   showSelect()
 }
 
