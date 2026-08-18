@@ -61,3 +61,148 @@ export function lineEnd(lines: string[], cursor: Cursor, count: number): MotionR
     kind: 'inclusive',
   }
 }
+
+type CharClass = 'blank' | 'word' | 'punct'
+
+function classOf(ch: string, big: boolean): CharClass {
+  if (ch === '' || ch === ' ' || ch === '\t') return 'blank'
+  if (big) return 'word'
+  return /[A-Za-z0-9_]/.test(ch) ? 'word' : 'punct'
+}
+
+function charAt(lines: string[], p: Cursor): string {
+  const line = lines[p.row]
+  return p.col < line.length ? line[p.col] : ''
+}
+
+/** 空行も列 0 の 1 マスとして数えて次の位置へ進む */
+function nextPos(lines: string[], p: Cursor): Cursor | null {
+  const width = Math.max(lines[p.row].length, 1)
+  if (p.col + 1 < width) return { row: p.row, col: p.col + 1 }
+  if (p.row + 1 < lines.length) return { row: p.row + 1, col: 0 }
+  return null
+}
+
+function prevPos(lines: string[], p: Cursor): Cursor | null {
+  if (p.col > 0) return { row: p.row, col: p.col - 1 }
+  if (p.row > 0) return { row: p.row - 1, col: Math.max(lines[p.row - 1].length, 1) - 1 }
+  return null
+}
+
+function isEmptyLine(lines: string[], row: number): boolean {
+  return lines[row].length === 0
+}
+
+function lastPosition(lines: string[]): Cursor {
+  const row = lines.length - 1
+  return { row, col: Math.max(0, lines[row].length - 1) }
+}
+
+export function wordForward(
+  lines: string[],
+  cursor: Cursor,
+  count: number,
+  big: boolean,
+): MotionResult {
+  let p = cursor
+  for (let i = 0; i < count; i += 1) {
+    const startClass = classOf(charAt(lines, p), big)
+    let q = nextPos(lines, p)
+    if (q === null) return { cursor: lastPosition(lines), kind: 'exclusive' }
+
+    // 今いる単語の残りを飛ばす。改行を越えたら単語境界なので止まる
+    if (startClass !== 'blank') {
+      while (q !== null && q.col !== 0 && classOf(charAt(lines, q), big) === startClass) {
+        q = nextPos(lines, q)
+      }
+    }
+    // 空白を飛ばす。ただし空行は 1 単語とみなして止まる
+    while (q !== null && classOf(charAt(lines, q), big) === 'blank' && !isEmptyLine(lines, q.row)) {
+      q = nextPos(lines, q)
+    }
+    if (q === null) return { cursor: lastPosition(lines), kind: 'exclusive' }
+    p = q
+  }
+  return { cursor: p, kind: 'exclusive' }
+}
+
+export function wordBackward(
+  lines: string[],
+  cursor: Cursor,
+  count: number,
+  big: boolean,
+): MotionResult {
+  let p = cursor
+  for (let i = 0; i < count; i += 1) {
+    let q = prevPos(lines, p)
+    if (q === null) return { cursor: { row: 0, col: 0 }, kind: 'exclusive' }
+
+    while (q !== null && classOf(charAt(lines, q), big) === 'blank' && !isEmptyLine(lines, q.row)) {
+      q = prevPos(lines, q)
+    }
+    if (q === null) return { cursor: { row: 0, col: 0 }, kind: 'exclusive' }
+    if (isEmptyLine(lines, q.row)) {
+      p = q
+      continue
+    }
+
+    // その単語の先頭まで戻る。行をまたいだら止まる
+    const cls = classOf(charAt(lines, q), big)
+    for (;;) {
+      const n = prevPos(lines, q)
+      if (n === null || n.row !== q.row) break
+      if (classOf(charAt(lines, n), big) !== cls) break
+      q = n
+    }
+    p = q
+  }
+  return { cursor: p, kind: 'exclusive' }
+}
+
+export function wordEnd(
+  lines: string[],
+  cursor: Cursor,
+  count: number,
+  big: boolean,
+): MotionResult {
+  let p = cursor
+  for (let i = 0; i < count; i += 1) {
+    let q = nextPos(lines, p)
+    while (q !== null && classOf(charAt(lines, q), big) === 'blank') {
+      q = nextPos(lines, q)
+    }
+    if (q === null) break
+
+    const cls = classOf(charAt(lines, q), big)
+    for (;;) {
+      const n = nextPos(lines, q)
+      if (n === null || n.row !== q.row) break
+      if (classOf(charAt(lines, n), big) !== cls) break
+      q = n
+    }
+    p = q
+  }
+  return { cursor: p, kind: 'inclusive' }
+}
+
+export function wordEndBackward(lines: string[], cursor: Cursor, count: number): MotionResult {
+  let p = cursor
+  for (let i = 0; i < count; i += 1) {
+    let q = prevPos(lines, p)
+    if (q === null) break
+
+    // 今いる単語を先頭側へ抜ける
+    const startClass = classOf(charAt(lines, p), false)
+    if (startClass !== 'blank') {
+      while (q !== null && q.row === p.row && classOf(charAt(lines, q), false) === startClass) {
+        q = prevPos(lines, q)
+      }
+    }
+    while (q !== null && classOf(charAt(lines, q), false) === 'blank') {
+      q = prevPos(lines, q)
+    }
+    if (q === null) break
+    p = q
+  }
+  return { cursor: p, kind: 'inclusive' }
+}
