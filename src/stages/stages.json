@@ -78,15 +78,15 @@
   {
     "id": "06-char-search",
     "title": "6. 文字を狙い撃つ",
-    "lesson": "f: で次の : へ、t: でその手前へ。F と T は逆方向。; で繰り返し、, で逆に繰り返す。",
+    "lesson": "f<文字> でその文字へ、t<文字> でその手前へ。F と T は逆方向に探す。; で直前の検索を繰り返し、, で逆向きに繰り返す。",
     "allowedKeys": "hjklwbeg0^$G123456789fFtT;,",
-    "buffer": ["a:bb:ccc:dddd:eeeee:f", "x-yy-zzz-wwww-v"],
-    "cursor": [0, 0],
+    "buffer": ["xxxxxsxxxxxxxxxxxxxxqxxxxxxxxxxxxxxqxxxxxxxxxxxxxxrxxxxxxxxxxxxxxxxxxxxxxxxxxxxxpxxxxxxxxxxxxxxpxxxxxxxxxxxxxxrxxxxxxxxx"],
+    "cursor": [0, 65],
     "goal": {
       "type": "collect",
-      "targets": [[0, 1], [0, 4], [0, 8], [0, 13], [0, 19]]
+      "targets": [[0, 80], [0, 95], [0, 109], [0, 51], [0, 35], [0, 20], [0, 6]]
     },
-    "solution": "f:;;;;"
+    "solution": "fp;tr,Fq;Ts"
   },
   {
     "id": "07-paragraph",
@@ -124,16 +124,13 @@
     "title": "8. 移動の総合演習",
     "lesson": "W B E は空白だけを区切りとみなす。記号の多いコードでは w より W が速い。",
     "allowedKeys": "hjklwbeg0^$G123456789fFtT;,{}WBE",
-    "buffer": [
-      "a=1; b=2; c=3; d=4; e=5;",
-      "return [n, url, done];"
-    ],
+    "buffer": ["a=1; b=2; c=b; d=e; e=5;"],
     "cursor": [0, 10],
     "goal": {
       "type": "collect",
-      "targets": [[0, 5], [0, 15], [0, 20]]
+      "targets": [[0, 5], [0, 13], [0, 20]]
     },
-    "solution": "BWWW"
+    "solution": "BEEWW"
   },
   {
     "id": "09-x",
@@ -160,10 +157,10 @@
     "title": "11. 文字を書き足す",
     "lesson": "i はカーソル位置、a はその次、I は行頭、A は行末から挿入。o は下に、O は上に行を作る。Esc で戻る。",
     "allowedKeys": "hjklwbeg0^$G123456789fFtT;,{}WBExdiaIAoO<Esc><BS><CR>",
-    "buffer": ["nme"],
+    "buffer": ["nme", "buttn"],
     "cursor": [0, 0],
-    "goal": { "type": "transform", "expected": ["top", "  name!", "end"] },
-    "solution": "aa<Esc>A!<Esc>I<Space><Space><Esc>oend<Esc>kOtop"
+    "goal": { "type": "transform", "expected": ["top", "  name!", "button", "end"] },
+    "solution": "aa<Esc>A!<Esc>I<Space><Space><Esc>jeio<Esc>oend<Esc>ggOtop"
   },
   {
     "id": "12-change",
@@ -188,10 +185,10 @@
     "title": "13. 写して貼る",
     "lesson": "y でレジスタに写す。yy は 1 行ぶん。p は後ろへ、P は前へ貼る。行ぶんと文字ぶんで貼り方が変わる。",
     "allowedKeys": "hjklwbeg0^$G123456789fFtT;,{}WBExdiaIAoO<Esc><BS><CR>cypP",
-    "buffer": ["one two", "X"],
+    "buffer": ["one two", "A", "B"],
     "cursor": [0, 0],
-    "goal": { "type": "transform", "expected": ["one two", "one two", "Xtwo"] },
-    "solution": "yyPwy$Gp"
+    "goal": { "type": "transform", "expected": ["one two", "twoA", "B", "one two"] },
+    "solution": "yyGpggwy$jP"
   },
   {
     "id": "14-undo-replace",
@@ -206,12 +203,23 @@
   {
     "id": "15-count",
     "title": "15. 回数を前に付ける",
-    "lesson": "d4w で 4 単語ぶん消す。3w で 3 単語進む。オペレータの前でもモーションの前でも同じ意味になる。",
+    "lesson": "3dd で 3 行まとめて消す。数字を前に付けると、dd や dj を連打するより短く済む。",
     "allowedKeys": "hjklwbeg0^$G123456789fFtT;,{}WBExdiaIAoO<Esc><BS><CR>cypPur",
-    "buffer": ["one two three four five six", "1 2 3 4 5 6 7"],
+    "buffer": [
+      "keep-a",
+      "junk1",
+      "junk2",
+      "junk3",
+      "keep-b",
+      "junk4",
+      "junk5",
+      "junk6",
+      "junk7",
+      "keep-c"
+    ],
     "cursor": [0, 0],
-    "goal": { "type": "transform", "expected": ["one six", "1 2 3 7"] },
-    "solution": "wd4wjwd3w"
+    "goal": { "type": "transform", "expected": ["keep-a", "keep-b", "keep-c"] },
+    "solution": "j3ddj4dd"
   },
   {
     "id": "16-review-rename",
@@ -231,13 +239,27 @@
     "title": "17. 総合 2 — 行を捨てて複製する",
     "lesson": "余計な行を消して、必要な行を複製する。行番号ジャンプと yy p を組み合わせる。",
     "allowedKeys": "hjklwbeg0^$G123456789fFtT;,{}WBExdiaIAoO<Esc><BS><CR>cypPur",
-    "buffer": ["const a = 1;", "const b = 2;", "DELETE THIS LINE", "const c = 3;"],
+    "buffer": [
+      "const a = 1;",
+      "const b = 2;",
+      "const x1 = 0;",
+      "const x2 = 0;",
+      "DELETE THIS LINE",
+      "const c = 3;"
+    ],
     "cursor": [0, 0],
     "goal": {
       "type": "transform",
-      "expected": ["const a = 1;", "const b = 2;", "const c = 3;", "const c = 3;"]
+      "expected": [
+        "const a = 1;",
+        "const b = 2;",
+        "const x1 = 0;",
+        "const x2 = 0;",
+        "const c = 3;",
+        "const c = 3;"
+      ]
     },
-    "solution": "3Gddyyp"
+    "solution": "5Gddyyp"
   },
   {
     "id": "18-review-sum",
