@@ -155,10 +155,17 @@ describe('insertCharwise', () => {
     })
   })
 
-  it('入力配列を変更しない', () => {
+  it('入力配列を変更しない（1 行の場合）', () => {
     const input = ['axz']
     const original = ['axz']
     insertCharwise(input, { row: 0, col: 1 }, ['bc'])
+    expect(input).toEqual(original)
+  })
+
+  it('入力配列を変更しない（複数行の場合）', () => {
+    const input = ['axz']
+    const original = ['axz']
+    insertCharwise(input, { row: 0, col: 1 }, ['b', 'c'])
     expect(input).toEqual(original)
   })
 })
