@@ -1,4 +1,4 @@
-import { clampCursor } from './buffer'
+import { clampCursor, firstNonBlankCol, insertLinewise } from './buffer'
 import {
   charSearch,
   firstNonBlank,
@@ -23,11 +23,13 @@ import {
   applyCharwiseDelete,
   applyLinewiseDelete,
   deleteChars,
+  pushUndo,
   rangeFor,
   reset,
 } from './operators'
 import type {
   CharSearchKind,
+  Cursor,
   EditorState,
   MotionResult,
   OperatorName,
@@ -208,14 +210,50 @@ function resolveGPending(
   return reset(state)
 }
 
+/**
+ * 挿入モードへ入る。undo スナップショットはここで 1 回だけ積む。
+ * lines を渡すと、その行配列に差し替えてから入る（o / O 用）。
+ */
+function enterInsert(state: EditorState, cursor: Cursor, lines?: string[]): EditorState {
+  const pushed = pushUndo(state)
+  const nextLines = lines ?? state.lines
+  const clamped = clampCursor(nextLines, cursor, 'insert')
+  return {
+    ...reset(pushed),
+    lines: nextLines,
+    cursor: clamped,
+    desiredCol: clamped.col,
+    mode: 'insert',
+  }
+}
+
 /** このタスクで解釈する単独コマンド。該当しなければ null */
 function applySingleCommand(
   state: EditorState,
   key: string,
   count: number,
 ): EditorState | null {
-  if (key === 'x') return deleteChars(state, count)
-  return null
+  const { row, col } = state.cursor
+  const line = state.lines[row]
+
+  switch (key) {
+    case 'x':
+      return deleteChars(state, count)
+    case 'i':
+      return enterInsert(state, state.cursor)
+    case 'a':
+      return enterInsert(state, { row, col: col + 1 })
+    case 'I':
+      return enterInsert(state, { row, col: firstNonBlankCol(line) })
+    case 'A':
+      return enterInsert(state, { row, col: line.length })
+    case 'o':
+      return enterInsert(state, { row: row + 1, col: 0 }, insertLinewise(state.lines, row + 1, ['']))
+    case 'O':
+      return enterInsert(state, { row, col: 0 }, insertLinewise(state.lines, row, ['']))
+    default:
+      return null
+  }
 }
 
 export function applyNormalKey(state: EditorState, key: string): EditorState {
