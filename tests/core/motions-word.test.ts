@@ -71,6 +71,19 @@ describe('wordBackward (b)', () => {
   it('バッファ先頭で止まる', () => {
     expect(wordBackward(SENTENCE, { row: 0, col: 2 }, 9, false).cursor).toEqual({ row: 0, col: 0 })
   })
+
+  it('exclusive である', () => {
+    expect(wordBackward(SENTENCE, { row: 1, col: 14 }, 1, false).kind).toBe('exclusive')
+  })
+
+  it('空行で止まる', () => {
+    // b は空行を 1 つの単語とみなす（w と対称）ため、
+    // "cd" の 'c' から戻ると空行 (row 1) でいったん止まる
+    expect(wordBackward(['ab', '', 'cd'], { row: 2, col: 0 }, 1, false).cursor).toEqual({
+      row: 1,
+      col: 0,
+    })
+  })
 })
 
 describe('wordEnd (e)', () => {
@@ -90,6 +103,15 @@ describe('wordEnd (e)', () => {
   it('inclusive である', () => {
     expect(wordEnd(GREEK, { row: 0, col: 0 }, 1, false).kind).toBe('inclusive')
   })
+
+  it('空行を飛ばす', () => {
+    // e は空行を単語とみなさない（w/b と非対称）ため、
+    // "ab" の末尾から進むと空行 (row 1) では止まらず "cd" の末尾まで届く
+    expect(wordEnd(['ab', '', 'cd'], { row: 0, col: 1 }, 1, false).cursor).toEqual({
+      row: 2,
+      col: 1,
+    })
+  })
 })
 
 describe('wordEndBackward (ge)', () => {
@@ -107,5 +129,14 @@ describe('wordEndBackward (ge)', () => {
 
   it('inclusive である', () => {
     expect(wordEndBackward(GREEK, { row: 1, col: 12 }, 1).kind).toBe('inclusive')
+  })
+
+  it('空行を飛ばす', () => {
+    // ge も e と同じく空行を単語とみなさないため、
+    // "cd" の先頭から戻ると空行 (row 1) では止まらず "ab" の末尾まで届く
+    expect(wordEndBackward(['ab', '', 'cd'], { row: 2, col: 0 }, 1).cursor).toEqual({
+      row: 0,
+      col: 1,
+    })
   })
 })
